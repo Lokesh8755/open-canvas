@@ -1,5 +1,4 @@
-import { expect } from "vitest";
-import * as ls from "langsmith/vitest";
+import { describe, test, expect } from "vitest";  // Fixed: Added explicit imports
 import { z } from "zod";
 import { ChatOpenAI } from "@langchain/openai";
 
@@ -7,24 +6,18 @@ import { graph } from "@opencanvas/agents/dist/open-canvas/index";
 import { QUERY_ROUTING_DATA } from "./data/query_routing.js";
 import { CODEGEN_DATA } from "./data/codegen.js";
 
-ls.describe("query routing", () => {
-  ls.test(
-    "routes followups with questions to update artifact",
-    {
-      inputs: QUERY_ROUTING_DATA.inputs,
-      referenceOutputs: QUERY_ROUTING_DATA.referenceOutputs,
-    },
-    async ({ inputs, referenceOutputs }) => {
-      const generatePathNode = graph.nodes.generatePath;
-      const res = await generatePathNode.invoke(inputs, {
-        configurable: {
-          customModelName: "gpt-4o-mini",
-        },
-      });
-      ls.logOutputs(res);
-      expect(res).toEqual(referenceOutputs);
-    }
-  );
+describe("query routing", () => {
+  test("routes followups with questions to update artifact", async () => {
+    const { inputs, referenceOutputs } = QUERY_ROUTING_DATA;
+    const generatePathNode = graph.nodes.generatePath;
+    const res = await generatePathNode.invoke(inputs, {
+      configurable: {
+        customModelName: "gpt-4o-mini",
+      },
+    });
+    console.log("Outputs:", res);
+    expect(res).toEqual(referenceOutputs);
+  });
 });
 
 const qualityEvaluator = async (params: {
@@ -63,28 +56,23 @@ const qualityEvaluator = async (params: {
   };
 };
 
-ls.describe("codegen", () => {
-  ls.test(
-    "generate code with an LLM agent when asked",
-    {
-      inputs: CODEGEN_DATA.inputs,
-      referenceOutputs: {},
-    },
-    async ({ inputs }) => {
-      const generateArtifactNode = graph.nodes.generateArtifact;
-      const res = await generateArtifactNode.invoke(inputs, {
-        configurable: {
-          customModelName: "gpt-4o-mini",
-        },
-      });
-      ls.logOutputs(res);
-      const generatedCode = (res.artifact?.contents[0] as any).code;
-      expect(generatedCode).toBeDefined();
-      const wrappedEvaluator = ls.wrapEvaluator(qualityEvaluator);
-      await wrappedEvaluator({
-        inputs: inputs.messages[0].content,
-        outputs: generatedCode,
-      });
-    }
-  );
+describe("codegen", () => {
+  test("generate code with an LLM agent when asked", async () => {
+    const { inputs } = CODEGEN_DATA;
+    const generateArtifactNode = graph.nodes.generateArtifact;
+    const res = await generateArtifactNode.invoke(inputs, {
+      configurable: {
+        customModelName: "gpt-4o-mini",
+      },
+    });
+    console.log("Outputs:", res);
+    const generatedCode = (res.artifact?.contents[0] as any).code;
+    expect(generatedCode).toBeDefined();
+
+    const evaluation = await qualityEvaluator({
+      inputs: inputs.messages[0].content,
+      outputs: generatedCode,
+    });
+    console.log("Evaluation:", evaluation);
+  });
 });

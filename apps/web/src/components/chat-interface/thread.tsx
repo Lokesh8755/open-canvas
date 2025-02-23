@@ -6,7 +6,6 @@ import { Thread as ThreadType } from "@langchain/langgraph-sdk";
 import { ArrowDownIcon, PanelRightOpen, SquarePen } from "lucide-react";
 import { Dispatch, FC, SetStateAction } from "react";
 import { ReflectionsDialog } from "../reflections-dialog/ReflectionsDialog";
-import { useLangSmithLinkToolUI } from "../tool-hooks/LangSmithLinkToolUI";
 import { TooltipIconButton } from "../ui/assistant-ui/tooltip-icon-button";
 import { TighterText } from "../ui/header";
 import { Composer } from "./composer";
@@ -68,9 +67,6 @@ export const Thread: FC<ThreadProps> = (props: ThreadProps) => {
   } = useThreadContext();
   const { user } = useUserContext();
 
-  // Render the LangSmith trace link
-  useLangSmithLinkToolUI();
-
   const handleCreateThread = async () => {
     if (!user) {
       toast({
@@ -82,15 +78,12 @@ export const Thread: FC<ThreadProps> = (props: ThreadProps) => {
       return;
     }
 
-    // Remove the threadId param from the URL
     removeThreadIdQueryParam();
-
     setModelName(modelName);
     setModelConfig(modelName, modelConfig);
     clearState();
     setChatStarted(false);
-    // Set `true` for `isNewThread` because we want to create a new thread
-    // if the existing one has values.
+    
     const thread = await searchOrCreateThread(true);
     if (!thread) {
       toast({
@@ -168,7 +161,6 @@ export const Thread: FC<ThreadProps> = (props: ThreadProps) => {
                 {...prop}
                 feedbackSubmitted={feedbackSubmitted}
                 setFeedbackSubmitted={setFeedbackSubmitted}
-                runId={runId}
               />
             ),
           }}

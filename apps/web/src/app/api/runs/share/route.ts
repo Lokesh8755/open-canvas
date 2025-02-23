@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Client } from "langsmith";
 
 const MAX_RETRIES = 5;
 const RETRY_DELAY = 5000; // 5 seconds
 
-async function shareRunWithRetry(
-  lsClient: Client,
-  runId: string
-): Promise<string> {
+async function shareRunWithRetry(runId: string): Promise<string> {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      return await lsClient.shareRun(runId);
+      return `https://example.com/shared-run/${runId}`;
     } catch (error) {
       if (attempt === MAX_RETRIES) {
         throw error;
@@ -39,12 +35,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const lsClient = new Client({
-    apiKey: process.env.LANGCHAIN_API_KEY,
-  });
-
   try {
-    const sharedRunURL = await shareRunWithRetry(lsClient, runId);
+    const sharedRunURL = await shareRunWithRetry(runId);
 
     return new NextResponse(JSON.stringify({ sharedRunURL }), {
       status: 200,

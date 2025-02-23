@@ -1,24 +1,25 @@
-import { Feedback } from "langsmith";
 import { useCallback, useState } from "react";
 
 export interface FeedbackResponse {
   success: boolean;
-  feedback: Feedback;
+  feedback: {
+    key: string;
+    score: number;
+    comment?: string;
+  };
 }
 
 interface UseFeedbackResult {
   isLoading: boolean;
   error: string | null;
   sendFeedback: (
-    runId: string,
     feedbackKey: string,
     score: number,
     comment?: string
   ) => Promise<FeedbackResponse | undefined>;
   getFeedback: (
-    runId: string,
     feedbackKey: string
-  ) => Promise<Feedback[] | undefined>;
+  ) => Promise<{ key: string; score: number; comment?: string }[] | undefined>;
 }
 
 export function useFeedback(): UseFeedbackResult {
@@ -27,7 +28,6 @@ export function useFeedback(): UseFeedbackResult {
 
   const sendFeedback = useCallback(
     async (
-      runId: string,
       feedbackKey: string,
       score: number,
       comment?: string
@@ -36,9 +36,9 @@ export function useFeedback(): UseFeedbackResult {
       setError(null);
 
       try {
-        const res = await fetch("/api/runs/feedback", {
+        const res = await fetch("/api/feedback", {
           method: "POST",
-          body: JSON.stringify({ runId, feedbackKey, score, comment }),
+          body: JSON.stringify({ feedbackKey, score, comment }),
           headers: {
             "Content-Type": "application/json",
           },
@@ -64,14 +64,13 @@ export function useFeedback(): UseFeedbackResult {
 
   const getFeedback = useCallback(
     async (
-      runId: string,
       feedbackKey: string
-    ): Promise<Feedback[] | undefined> => {
+    ): Promise<{ key: string; score: number; comment?: string }[] | undefined> => {
       setIsLoading(true);
       setError(null);
       try {
         const res = await fetch(
-          `/api/runs/feedback?runId=${encodeURIComponent(runId)}&feedbackKey=${encodeURIComponent(feedbackKey)}`
+          `/api/feedback?feedbackKey=${encodeURIComponent(feedbackKey)}`
         );
 
         if (!res.ok) {

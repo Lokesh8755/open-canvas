@@ -11,11 +11,10 @@ import {
   getModelFromConfig,
   createContextDocumentMessages,
 } from "../../../utils.js";
-import { LangGraphRunnableConfig } from "@langchain/langgraph";
 import { getArtifactContent } from "@opencanvas/shared/utils/artifacts";
 import z from "zod";
 import { BaseMessage } from "@langchain/core/messages";
-import { traceable } from "langsmith/traceable";
+import { LangGraphRunnableConfig } from "@langchain/langgraph";
 
 interface DynamicDeterminePathParams {
   state: typeof OpenCanvasGraphAnnotation.State;
@@ -100,6 +99,4 @@ async function dynamicDeterminePathFunc({
   return result.tool_calls?.[0]?.args as z.infer<typeof schema> | undefined;
 }
 
-export const dynamicDeterminePath = traceable(dynamicDeterminePathFunc, {
-  name: "dynamic_determine_path",
-});
+export const dynamicDeterminePath = dynamicDeterminePathFunc;
